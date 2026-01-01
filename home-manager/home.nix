@@ -13,13 +13,19 @@
     fd
     d2
     nixfmt-rfc-style
+    pixi
+    basedpyright
+    ruff
   ];
 
   # Shell
   programs.zsh = {
     enable = true;
+    defaultKeymap = "viins";
     shellAliases = {
       hms = "nix run home-manager -- switch --flake ~/.config/home-manager";
+      ll = "ls -la";
+      glola = "git log --graph --all";
     };
   };
 
@@ -50,7 +56,47 @@
     extraLuaConfig = ''
       require('render-markdown').setup({})
 
-      -- Auto-format on save
+      -- Python LSP (Neovim 0.11+)
+      vim.lsp.config('basedpyright', {
+        cmd = { 'basedpyright-langserver', '--stdio' },
+        filetypes = { 'python' },
+        root_markers = { 'pyproject.toml', 'pixi.toml', 'setup.py', '.git' },
+        settings = {
+          basedpyright = {
+            analysis = {
+              typeCheckingMode = "basic",
+            },
+          },
+        },
+      })
+
+      vim.lsp.config('ruff', {
+        cmd = { 'ruff', 'server' },
+        filetypes = { 'python' },
+        root_markers = { 'pyproject.toml', 'pixi.toml', 'ruff.toml', '.git' },
+      })
+
+      vim.lsp.enable({ 'basedpyright', 'ruff' })
+
+      -- LSP keymaps
+      vim.keymap.set('n', 'gl', vim.diagnostic.open_float)
+      vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
+      vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+      vim.keymap.set('n', 'K', vim.lsp.buf.hover)
+      vim.keymap.set('n', 'gd', vim.lsp.buf.definition)
+      vim.keymap.set('n', 'gr', vim.lsp.buf.references)
+      vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename)
+      vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action)
+
+      -- Format on save (LSP for Python, conform for others)
+      vim.api.nvim_create_autocmd('BufWritePre', {
+        callback = function(args)
+          if vim.bo[args.buf].filetype == 'python' then
+            vim.lsp.buf.format({ async = false })
+          end
+        end,
+      })
+
       require('conform').setup({
         formatters_by_ft = {
           nix = { "nixfmt" },
