@@ -9,10 +9,17 @@
     };
   };
 
-  outputs = { nixpkgs, home-manager, ... }: {
-    homeConfigurations."juliusvolland" = home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.aarch64-darwin;
-      modules = [ ./home.nix ];
+  outputs = { nixpkgs, home-manager, ... }:
+    let
+      pkgs = import nixpkgs {
+        system = "aarch64-darwin";
+        config.allowUnfree = true;
+      };
+    in
+    {
+      homeConfigurations."juliusvolland" = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        modules = [ ./home.nix ];
+      };
     };
-  };
 }

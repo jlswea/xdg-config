@@ -16,6 +16,7 @@
     pixi
     basedpyright
     ruff
+    claude-code
   ];
 
   # Shell
@@ -27,6 +28,12 @@
       ll = "ls -la";
       glola = "git log --graph --all";
     };
+    profileExtra = ''
+      # Nix
+      if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+      fi
+    '';
   };
 
   # Neovim
